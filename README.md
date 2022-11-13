@@ -1,70 +1,188 @@
-# Getting Started with Create React App
+# Send Get Requests
 
-This project was bootstrapped with [Create React App](https://github.com/facebook/create-react-app).
+```javascript
+import React, {useState} from 'react';
+ 
+import MoviesList from './components/MoviesList';
+import './App.css';
+ 
+function App() {
+ 
+  const [movies, setMovies] = useState([]);
+ 
+  function fetchMoviesHandler () {
+    fetch('https://swapi.dev/api/films')
+    .then(response => {
+      return response.json();
+    })
+    .then((data)=>{
+      const trasnformedMovies = data.results.map(movieData=>{
+        return {
+          id:movieData.episode_id,
+          title: movieData.title,
+          openingText: movieData.opening_crawl,
+          releaseDate: movieData.release_date
+        }
+      })
+      setMovies(trasnformedMovies)
+    });
+  }
+ 
+  return (
+    <React.Fragment>
+      <section>
+        <button onClick={fetchMoviesHandler}>Fetch Movies</button>
+      </section>
+      <section>
+        <MoviesList movies={movies} />
+      </section>
+    </React.Fragment>
+  );
+}
+ 
+export default App;
+ 
+```
 
-## Available Scripts
+Using async/await
 
-In the project directory, you can run:
+```javascript
+import React, {useState} from 'react';
+ 
+import MoviesList from './components/MoviesList';
+import './App.css';
+ 
+function App() {
+ 
+  const [movies, setMovies] = useState([]);
+ 
+  async function fetchMoviesHandler () {
+    const response = await fetch('https://swapi.dev/api/films')
+    const data = await response.json();
+   
+      const trasnformedMovies = data.results.map(movieData=>{
+        return {
+          id:movieData.episode_id,
+          title: movieData.title,
+          openingText: movieData.opening_crawl,
+          releaseDate: movieData.release_date
+        }
+      })
+      setMovies(trasnformedMovies)
+ 
+  }
+ 
+  return (
+    <React.Fragment>
+      <section>
+        <button onClick={fetchMoviesHandler}>Fetch Movies</button>
+      </section>
+      <section>
+        <MoviesList movies={movies} />
+      </section>
+    </React.Fragment>
+  );
+}
+ 
+export default App;
+```
 
-### `npm start`
+# Firebase 
 
-Runs the app in the development mode.\
-Open [http://localhost:3000](http://localhost:3000) to view it in your browser.
+Firebase: create a back end + database : a full backend app and complete rest API
 
-The page will reload when you make changes.\
-You may also see any lint errors in the console.
+- Create project
+- Real time database
+- Create database
+- Take the link provided and add something : https://react-http-26861-default-rtdb.firebaseio.com/ + movies.json 
 
-### `npm test`
+Then you can send GET and POST request to the firebase backend
 
-Launches the test runner in the interactive watch mode.\
-See the section about [running tests](https://facebook.github.io/create-react-app/docs/running-tests) for more information.
-
-### `npm run build`
-
-Builds the app for production to the `build` folder.\
-It correctly bundles React in production mode and optimizes the build for the best performance.
-
-The build is minified and the filenames include the hashes.\
-Your app is ready to be deployed!
-
-See the section about [deployment](https://facebook.github.io/create-react-app/docs/deployment) for more information.
-
-### `npm run eject`
-
-**Note: this is a one-way operation. Once you `eject`, you can't go back!**
-
-If you aren't satisfied with the build tool and configuration choices, you can `eject` at any time. This command will remove the single build dependency from your project.
-
-Instead, it will copy all the configuration files and the transitive dependencies (webpack, Babel, ESLint, etc) right into your project so you have full control over them. All of the commands except `eject` will still work, but they will point to the copied scripts so you can tweak them. At this point you're on your own.
-
-You don't have to ever use `eject`. The curated feature set is suitable for small and middle deployments, and you shouldn't feel obligated to use this feature. However we understand that this tool wouldn't be useful if you couldn't customize it when you are ready for it.
-
-## Learn More
-
-You can learn more in the [Create React App documentation](https://facebook.github.io/create-react-app/docs/getting-started).
-
-To learn React, check out the [React documentation](https://reactjs.org/).
-
-### Code Splitting
-
-This section has moved here: [https://facebook.github.io/create-react-app/docs/code-splitting](https://facebook.github.io/create-react-app/docs/code-splitting)
-
-### Analyzing the Bundle Size
-
-This section has moved here: [https://facebook.github.io/create-react-app/docs/analyzing-the-bundle-size](https://facebook.github.io/create-react-app/docs/analyzing-the-bundle-size)
-
-### Making a Progressive Web App
-
-This section has moved here: [https://facebook.github.io/create-react-app/docs/making-a-progressive-web-app](https://facebook.github.io/create-react-app/docs/making-a-progressive-web-app)
-
-### Advanced Configuration
-
-This section has moved here: [https://facebook.github.io/create-react-app/docs/advanced-configuration](https://facebook.github.io/create-react-app/docs/advanced-configuration)
-
-### Deployment
-
-This section has moved here: [https://facebook.github.io/create-react-app/docs/deployment](https://facebook.github.io/create-react-app/docs/deployment)
-
-### `npm run build` fails to minify
-
-This section has moved here: [https://facebook.github.io/create-react-app/docs/troubleshooting#npm-run-build-fails-to-minify](https://facebook.github.io/create-react-app/docs/troubleshooting#npm-run-build-fails-to-minify)
+```javascript
+import React, { useState, useEffect, useCallback } from 'react';
+ 
+import MoviesList from './components/MoviesList';
+import AddMovie from './components/AddMovie';
+import './App.css';
+ 
+function App() {
+  const [movies, setMovies] = useState([]);
+  const [isLoading, setIsLoading] = useState(false);
+  const [error, setError] = useState(null);
+ 
+  const fetchMoviesHandler = useCallback(async () => {
+    setIsLoading(true);
+    setError(null);
+    try {
+      const response = await fetch('https://react-http-26861-default-rtdb.firebaseio.com/movies.json');
+      if (!response.ok) {
+        throw new Error('Something went wrong!');
+      }
+ 
+      const data = await response.json();
+ 
+      const loadedMovies = [];
+ 
+      for (const key in data) {
+        loadedMovies.push({
+          id: key,
+          title: data[key].title,
+          openingText: data[key].openingText,
+          releaseDate: data[key].releaseDate,
+        });
+      }
+ 
+     
+      setMovies(loadedMovies);
+    } catch (error) {
+      setError(error.message);
+    }
+    setIsLoading(false);
+  }, []);
+ 
+  useEffect(() => {
+    fetchMoviesHandler();
+  }, [fetchMoviesHandler]);
+ 
+  async function addMovieHandler(movie) {
+    const response = await fetch('https://react-http-26861-default-rtdb.firebaseio.com/movies.json', {
+      method: 'POST',
+      body: JSON.stringify(movie),
+      headers: {
+        'Content-Type': 'application/json'
+      }
+    });
+    const data = await response.json()
+    console.log(data)
+  }
+ 
+  let content = <p>Found no movies.</p>;
+ 
+  if (movies.length > 0) {
+    content = <MoviesList movies={movies} />;
+  }
+ 
+  if (error) {
+    content = <p>{error}</p>;
+  }
+ 
+  if (isLoading) {
+    content = <p>Loading...</p>;
+  }
+ 
+  return (
+    <React.Fragment>
+      <section>
+        <AddMovie onAddMovie={addMovieHandler} />
+      </section>
+      <section>
+        <button onClick={fetchMoviesHandler}>Fetch Movies</button>
+      </section>
+      <section>{content}</section>
+    </React.Fragment>
+  );
+}
+ 
+export default App;
+ 
+```
